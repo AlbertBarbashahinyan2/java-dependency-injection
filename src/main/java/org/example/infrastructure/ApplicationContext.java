@@ -2,7 +2,6 @@ package org.example.infrastructure;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.example.infrastructure.annotation.Singleton;
 import org.example.infrastructure.configreader.ObjectConfigReader;
 
 import java.util.HashMap;
@@ -25,6 +24,7 @@ public class ApplicationContext {
     @SuppressWarnings("unchecked")
     public <T> T getObject(Class<T> cls) {
         Class<? extends T> implClass = objectConfigReader.getImplClass(cls);
+        objectConfigReader.storeComponents(implClass);
 
         if (singletonCache.containsKey(implClass)) {
             return (T) singletonCache.get(implClass);
@@ -32,10 +32,11 @@ public class ApplicationContext {
 
         T object = objectFactory.createObject(implClass);
 
-        if (implClass.isAnnotationPresent(Singleton.class)) {
+        if (objectConfigReader.isSingleton(implClass)) {
             singletonCache.put(implClass, object);
         }
 
         return object;
     }
+
 }

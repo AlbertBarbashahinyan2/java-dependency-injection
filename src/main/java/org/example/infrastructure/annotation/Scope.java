@@ -1,11 +1,15 @@
 package org.example.infrastructure.annotation;
 
+import org.example.infrastructure.enums.ScopeType;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD})
-public @interface Log {
+@Target(ElementType.TYPE)
+public @interface Scope {
+    ScopeType value() default ScopeType.SINGLETON;
+
 }

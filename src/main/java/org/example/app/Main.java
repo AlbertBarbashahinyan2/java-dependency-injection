@@ -10,12 +10,15 @@ public class Main {
 
         UserRegistrationService registrationService = context.getObject(UserRegistrationService.class);
 
-        registrationService.register(
+        registrationService.register( // the getUser used inside this one does not cache yet since it returns null
                 new User(
                         "Gurgen",
                         "gurgen@inconceptlabsc.com",
                         "password123"
                 )
         );
+        UserRepository userRepository = context.getObject(UserInMemoryRepository.class);
+        User user1 = userRepository.getUser("Gurgen"); // here Gurgen is cached
+        User user2 = userRepository.getUser("Gurgen"); // here the cached User is returned
     }
 }

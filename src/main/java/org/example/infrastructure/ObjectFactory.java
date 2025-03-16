@@ -3,10 +3,10 @@ package org.example.infrastructure;
 import lombok.SneakyThrows;
 import org.example.infrastructure.configreader.ObjectConfigReader;
 import org.example.infrastructure.configurator.ObjectConfigurator;
+import org.example.infrastructure.postconstruct.PostConstructAnnotationHandler;
 import org.example.infrastructure.proxywrapper.ProxyWrapper;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -16,6 +16,7 @@ public class ObjectFactory {
     private ApplicationContext applicationContext;
     private List<ObjectConfigurator> objectConfigurators = new ArrayList<>();
     private List<ProxyWrapper> proxyWrappers = new ArrayList<>();
+    private PostConstructAnnotationHandler postConstructAnnotationHandler = new PostConstructAnnotationHandler();
 
     @SneakyThrows
     public ObjectFactory(ApplicationContext applicationContext) {
@@ -48,6 +49,8 @@ public class ObjectFactory {
         for (ObjectConfigurator objectConfigurator : objectConfigurators) {
             objectConfigurator.configure(obj, applicationContext);
         }
+
+        postConstructAnnotationHandler.postConstructor(cls, obj);
 
         for (ProxyWrapper proxyWrapper : proxyWrappers) {
             obj = proxyWrapper.wrap(obj, cls);

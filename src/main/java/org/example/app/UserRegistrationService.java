@@ -1,17 +1,24 @@
 package org.example.app;
 
 
-import org.example.infrastructure.annotation.Inject;
-import org.example.infrastructure.annotation.Log;
+import org.example.infrastructure.annotation.*;
 
+@Component
 @Log
 public class UserRegistrationService {
 
     @Inject
+    @Qualifier(UserInMemoryRepository.class)
     private UserRepository userRepository;
 
     @Inject
+    @Qualifier(DefaultEmailSender.class)
     private EmailSender emailSender;
+
+    @PostConstruct
+    public void secondPhaseConstructor(){
+        System.out.println("UserRegistrationService SecondPhaseConstructor call");
+    }
 
     public void register(User user) {
         User existingUser = userRepository.getUser(user.getUsername());
