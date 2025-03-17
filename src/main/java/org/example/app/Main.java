@@ -20,5 +20,6 @@ public class Main {
         UserRepository userRepository = context.getObject(UserInMemoryRepository.class);
         User user1 = userRepository.getUser("Gurgen"); // here Gurgen is cached
         User user2 = userRepository.getUser("Gurgen"); // here the cached User is returned
+
     }
 }

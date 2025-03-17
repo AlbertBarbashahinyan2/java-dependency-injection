@@ -24,7 +24,6 @@ public class ApplicationContext {
     @SuppressWarnings("unchecked")
     public <T> T getObject(Class<T> cls) {
         Class<? extends T> implClass = objectConfigReader.getImplClass(cls);
-        objectConfigReader.storeComponents(implClass);
 
         if (singletonCache.containsKey(implClass)) {
             return (T) singletonCache.get(implClass);

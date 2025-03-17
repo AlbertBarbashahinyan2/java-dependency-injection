@@ -12,23 +12,32 @@ public class JavaObjectConfigReader implements ObjectConfigReader {
 
     private Reflections reflections;
 
-    private Collection<Class<?>> components = new HashSet<>();
-
     public JavaObjectConfigReader(String packageToScan) {
+
         this.reflections = new Reflections(packageToScan);
     }
 
     @Override
     public <T> Class<? extends T> getImplClass(Class<T> cls) {
         if (!cls.isInterface()) {
+            if (!cls.isAnnotationPresent(Component.class)) {
+                throw new ComponentNotFoundException("Component " +
+                        cls.getName() + " is not annotated with @Component");
+            }
             return cls;
         }
 
         Set<Class<? extends T>> subTypesOf =
                 reflections.getSubTypesOf(cls);
 
+        subTypesOf.removeIf(c -> !c.isAnnotationPresent(Component.class));
+
+        if (subTypesOf.isEmpty()) {
+            throw new ComponentNotFoundException("The interface " + cls.getName() +
+                    "does not have any @Component annotated implementations");
+        }
         if (subTypesOf.size() != 1) {
-            throw new RuntimeException("Interface should have a Qualifier or only one implementation");
+            throw new RuntimeException("Interface should have only one implementation");
         }
 
         return subTypesOf.iterator().next();
@@ -36,6 +45,7 @@ public class JavaObjectConfigReader implements ObjectConfigReader {
 
     @Override
     public <T> Collection<Class<? extends T>> getImplClasses(Class<T> cls) {
+
         return reflections.getSubTypesOf(cls);
     }
 
@@ -43,15 +53,5 @@ public class JavaObjectConfigReader implements ObjectConfigReader {
     public <T> boolean isSingleton(Class<T> cls) {
         return !cls.isAnnotationPresent(Scope.class)
                 || cls.getAnnotation(Scope.class).value() == ScopeType.SINGLETON;
-    }
-
-    @Override
-    public <T> void storeComponents(Class<T> cls) {
-        if (!cls.isAnnotationPresent(Component.class)){
-            throw new ComponentNotFoundException(
-                    "Component " + cls.getName() + " is not found"
-            );
-        }
-        components.add(cls);
     }
 }

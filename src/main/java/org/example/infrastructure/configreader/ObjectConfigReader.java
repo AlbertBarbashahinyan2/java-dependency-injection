@@ -9,6 +9,4 @@ public interface ObjectConfigReader {
     <T> Collection<Class<? extends T>> getImplClasses(Class<T> cls);
 
     <T> boolean isSingleton(Class<T> cls);
-
-    <T> void storeComponents(Class<T> cls);
 }
