@@ -32,22 +32,7 @@ public class CacheableAnnotationProxyWrapper implements ProxyWrapper {
                     new InvocationHandler() {
                         @Override
                         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                            if (annotatedMethods.containsKey(method.getName())) { // to stop at the method annotated with Cacheable, which for sure exists at this point
-                                Annotation[][] annotations = annotatedMethods.get(method.getName()); // get the annotations of parameters of that method
-                                for (int i = 0; i < annotations.length; i++) {
-                                    for (int j = 0; j < annotations[i].length; j++) {
-                                        if (annotations[i][j] instanceof CacheKey) { // we find the index (i) of the argument annotated with CacheKey
-                                            if (returnCache.containsKey(args[i])) { // if the i-th argument is cached already
-                                                System.out.printf("returning %s from cache: %s\n", args[i], returnCache.get(args[i])); // print for understanding reasons
-                                                return returnCache.get(args[i]); // then return the value associated with that argument
-                                            }
-                                            if (method.invoke(obj, args) != null) // here the argument is not cached and if value is not null
-                                                returnCache.put(args[i], method.invoke(obj, args)); // then we cache it with the value
-                                        }
-                                    }
-                                }
-                            }
-                            return method.invoke(obj, args);
+                            return cacheableInvoke(proxy, method, args, annotatedMethods, obj);
                         }
                     }
             );
@@ -58,24 +43,30 @@ public class CacheableAnnotationProxyWrapper implements ProxyWrapper {
                 new net.sf.cglib.proxy.InvocationHandler() {
                     @Override
                     public Object invoke(Object o, Method method, Object[] args) throws Throwable {
-                        if (annotatedMethods.containsKey(method.getName())) {
-                            Annotation[][] annotations = annotatedMethods.get(method.getName());
-                            for (int i = 0; i < annotations.length; i++) {
-                                for (int j = 0; j < annotations[i].length; j++) {
-                                    if (annotations[i][j] instanceof CacheKey) {
-                                        if (returnCache.containsKey(args[i])) {
-                                            System.out.printf("returning %s from cache: %s\n", args[i], returnCache.get(args[i]));
-                                            return returnCache.get(args[i]);
-                                        }
-                                        if (method.invoke(obj, args) != null)
-                                            returnCache.put(args[i], method.invoke(obj, args));
-                                    }
-                                }
-                            }
-                        }
-                        return method.invoke(obj, args);
+                        return cacheableInvoke(o, method, args, annotatedMethods, obj);
                     }
                 }
         );
+    }
+
+    private Object cacheableInvoke(Object proxy, Method method, Object[] args,
+                                   Map<String, Annotation[][]> annotatedMethods, Object obj) throws Throwable {
+        if (annotatedMethods.containsKey(method.getName())) { // to stop at the method annotated with Cacheable, which for sure exists at this point
+            Annotation[][] annotations = annotatedMethods.get(method.getName()); // get the annotations of parameters of that method
+            for (int i = 0; i < annotations.length; i++) {
+                for (int j = 0; j < annotations[i].length; j++) {
+                    if (annotations[i][j] instanceof CacheKey) { // we find the index (i) of the argument annotated with CacheKey
+                        if (returnCache.containsKey(args[i])) { // if the i-th argument is cached already
+                            System.out.printf("returning %s from cache: %s\n",
+                                    args[i], returnCache.get(args[i])); // print for understanding reasons
+                            return returnCache.get(args[i]); // then return the value associated with that argument
+                        }
+                        if (method.invoke(obj, args) != null) // here the argument is not cached and if value is not null
+                            returnCache.put(args[i], method.invoke(obj, args)); // then we cache it with the value
+                    }
+                }
+            }
+        }
+        return method.invoke(obj, args);
     }
 }

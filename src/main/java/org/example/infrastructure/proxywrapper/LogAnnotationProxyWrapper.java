@@ -32,11 +32,7 @@ public class LogAnnotationProxyWrapper implements ProxyWrapper {
                     new InvocationHandler() {
                         @Override
                         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                            if (hasLog || logMethods.contains(method.getName())) {
-                                System.out.printf(
-                                        "Calling method: %s.%s. Args: %s\n", cls.getName(), method.getName(), Arrays.toString(args));
-                            }
-                            return method.invoke(obj, args);
+                            return logInvoke(proxy, method, args, hasLog, logMethods, cls, obj);
                         }
                     }
             );
@@ -47,13 +43,19 @@ public class LogAnnotationProxyWrapper implements ProxyWrapper {
                 new net.sf.cglib.proxy.InvocationHandler() {
                     @Override
                     public Object invoke(Object o, Method method, Object[] args) throws Throwable {
-                        if (hasLog || logMethods.contains(method.getName())) {
-                            System.out.printf(
-                                "Calling method: %s.%s. Args: %s\n", cls.getName(), method.getName(), Arrays.toString(args));
-                        }
-                        return method.invoke(obj, args);
+                        return logInvoke(o, method, args, hasLog, logMethods, cls, obj);
                     }
                 }
         );
+    }
+
+    private Object logInvoke(Object proxy, Method method, Object[] args, boolean hasLog,
+                             Set<String> logMethods, Class<?> cls, Object obj) throws Throwable{
+        if (hasLog || logMethods.contains(method.getName())) {
+            System.out.printf(
+                    "Calling method: %s.%s. Args: %s\n",
+                    cls.getName(), method.getName(), Arrays.toString(args));
+        }
+        return method.invoke(obj, args);
     }
 }
